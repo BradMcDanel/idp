@@ -52,7 +52,7 @@ def test(model, test_loader):
     print('Test  Loss:: {}'.format(model_loss / N))
     print('Test  Acc.:: {}'.format(100. * (num_correct / N)))
 
-    return model_loss / N
+    return model_loss / N, 100.* (num_correct / N)
 
 
 def train_model(model, model_path, train_loader, test_loader, lr, epochs):
@@ -86,7 +86,9 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', default='mnist', help='dataset name')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
-    parser.add_argument('--aug', default='-')
+    parser.add_argument('--coeff-type', default='all-one',
+                        choices=('all-one', 'linear', 'harmonic'),
+                        help='coefficent function used to weight neurons')
     parser.add_argument('--output', default='models/model.pth',
                         help='output directory')
     args = parser.parse_args()
@@ -96,11 +98,11 @@ if __name__ == '__main__':
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
-    data = datasets.get_dataset(args.dataset_root, args.dataset, args.batch_size, args.cuda, args.aug)
+    data = datasets.get_dataset(args.dataset_root, args.dataset, args.batch_size, args.cuda)
     train_dataset, train_loader, test_dataset, test_loader = data
     x, _ = train_loader.__iter__().next()
     B, C, W, H = x.shape
-    model = net.MLP(C*W*H, 10, coeff_type='linear')
+    model = net.MLP(C*W*H, 10, coeff_type=args.coeff_type)
 
     if args.cuda:
         model = model.cuda()

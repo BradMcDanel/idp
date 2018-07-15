@@ -62,7 +62,7 @@ class IDPLinear(nn.Module):
     def forward(self, x):
         coeffs = self.coeffs.clone()
         if self.active < self.out_size:
-            coeffs[self.active:,0] = 0
+            coeffs[self.active:, 0] = 0
         return linear(x, self.weight, self.bias, coeffs)
 
 class MLP(nn.Module):
