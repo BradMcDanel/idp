@@ -17,12 +17,12 @@ def linear_coeffs(n, k=1):
 def harmonic_coeffs(n, k=1):
     return torch.Tensor([1. * k / i for i in range(1, n + 1)])
 
-class IPDLinearFunc(torch.autograd.Function):
+class IDPLinearFunc(torch.autograd.Function):
     @staticmethod
     def forward(ctx, input, weight, bias, coeffs):
         ctx.save_for_backward(input, weight, bias, coeffs)
         output = input.mm((coeffs*weight).t())
-        output += bias.unsqueeze(0).expand_as(output)
+        output += (torch.dot(coeffs.view(-1),bias)).unsqueeze(0).expand_as(output)
         return output
 
     @staticmethod
@@ -40,7 +40,7 @@ class IPDLinearFunc(torch.autograd.Function):
         return grad_input, grad_weight, grad_bias, grad_coeffs
 
 
-linear = IPDLinearFunc.apply
+linear = IDPLinearFunc.apply
 
 
 class IDPLinear(nn.Module):
@@ -51,7 +51,7 @@ class IDPLinear(nn.Module):
         self.out_size = out_size
         self.active = out_size
         nn.init.xavier_uniform_(self.weight)
-
+        
         if coeff_type == 'all-one':
             self.register_buffer('coeffs', all_one_coeffs(out_size).view(-1, 1))
         elif coeff_type == 'linear':
@@ -60,8 +60,10 @@ class IDPLinear(nn.Module):
             self.register_buffer('coeffs', harmonic_coeffs(out_size).view(-1, 1))
     
     def forward(self, x):
-        x.data[:, self.active:] = 0
-        return linear(x, self.weight, self.bias, self.coeffs)
+        coeffs = self.coeffs.clone()
+        if self.active < self.out_size:
+            coeffs[self.active:,0] = 0
+        return linear(x, self.weight, self.bias, coeffs)
 
 class MLP(nn.Module):
     def __init__(self, in_size, out_size, coeff_type='all-one'):

@@ -67,7 +67,7 @@ def train_model(model, model_path, train_loader, test_loader, lr, epochs):
         print('[Epoch {}]'.format(epoch+1))
         train(model, train_loader, optimizer)
         test(model, test_loader)
-        model.idp_percent(0.8)
+        model.idp_percent(0.5)
         test(model, test_loader)
         model.idp_percent(1.0)
         torch.save(model, model_path)
