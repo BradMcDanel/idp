@@ -10,3 +10,4 @@ python train.py --lr 0.01 --coeff-type harmonic --output models/harmonic.pth
 ```
 python sweep_idp.py
 ```
+![Sweeping IDP settings](https://github.com/BradMcDanel/idp/blob/master/figures/mlp.png?raw=true)
